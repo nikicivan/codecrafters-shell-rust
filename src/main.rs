@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::path::Path;
+use std::path::PathBuf;
 use std::{
     env, fs,
     io::{self, Write},
@@ -91,7 +91,13 @@ fn handle_pwd_command(command: &str) {
 }
 
 fn handle_cd_command(path: &str) {
-    match env::set_current_dir(Path::new(path)) {
+    let new_dir = if path == "~" {
+        PathBuf::from(env::var("HOME").unwrap_or_default())
+    } else {
+        PathBuf::from(path)
+    };
+
+    match env::set_current_dir(&new_dir) {
         Ok(_) => {}
         Err(_) => println!("cd: {}: No such file or directory", path),
     }
