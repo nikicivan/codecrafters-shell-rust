@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-#[allow(unused_imports)]
 use std::{
+    env, fs,
     io::{self, Write},
     process::exit,
 };
@@ -32,11 +32,20 @@ fn handle_command(command: &str) {
 
 fn handle_type_command(command: &str) {
     let shell_builtin_commands = HashSet::from(["echo", "exit", "type"]);
+    let path_env = env::var("PATH").unwrap();
 
     if shell_builtin_commands.contains(command) {
         println!("{} is a shell builtin", command);
     } else {
-        println!("{}: not found", command);
+        let splits = &mut path_env.split(":");
+
+        if let Some(path) =
+            splits.find(|path| fs::metadata(format!("{}/{}", path, command)).is_ok())
+        {
+            println!("{} is {}/{}", command, path, command);
+        } else {
+            println!("{}: not found", command)
+        }
     }
 }
 
