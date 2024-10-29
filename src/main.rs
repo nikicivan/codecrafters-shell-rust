@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::{
     env, fs,
     io::{self, Write},
-    process::exit,
+    process::{exit, Command},
 };
 
 fn main() {
@@ -15,6 +15,10 @@ fn main() {
         let mut input = String::new();
         stdin.read_line(&mut input).unwrap();
 
+        if input.trim().is_empty() {
+            continue;
+        }
+
         handle_command(input.trim());
     }
 }
@@ -26,7 +30,7 @@ fn handle_command(command: &str) {
         ["exit", code] => handle_exit_with_code(code),
         ["echo", ..] => println!("{}", tokens[1..].join(" ")),
         ["type", cmd] => handle_type_command(cmd),
-        _ => println!("{}: command not found", command),
+        _ => handle_external_run(command),
     }
 }
 
@@ -44,12 +48,40 @@ fn handle_type_command(command: &str) {
         {
             println!("{} is {}/{}", command, path, command);
         } else {
-            println!("{}: not found", command)
+            command_not_found(command)
         }
+    }
+}
+
+fn handle_external_run(command: &str) {
+    let commands: Vec<&str> = command.split(" ").collect();
+
+    if commands.is_empty() {
+        return;
+    }
+
+    let result = if commands.len() > 1 {
+        Command::new(commands[0])
+            .args(commands[1..].iter())
+            .output()
+    } else {
+        Command::new(commands[0]).output()
+    };
+
+    match result {
+        Ok(executable) => {
+            let output = String::from_utf8_lossy(&executable.stdout);
+            println!("{}", output.trim_end());
+        }
+        Err(_) => command_not_found(command),
     }
 }
 
 fn handle_exit_with_code(code: &str) {
     let code = code.parse::<i32>().unwrap();
     exit(code);
+}
+
+fn command_not_found(command: &str) {
+    println!("{}: not found", command);
 }
