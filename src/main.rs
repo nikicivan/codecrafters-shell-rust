@@ -1,5 +1,8 @@
 #[allow(unused_imports)]
-use std::io::{self, Write};
+use std::{
+    io::{self, Write},
+    process::exit,
+};
 
 fn main() {
     loop {
@@ -11,12 +14,21 @@ fn main() {
         let mut input = String::new();
         stdin.read_line(&mut input).unwrap();
 
-        let trimmed_input = input.trim();
-
-        if trimmed_input == "exit 0" {
-            std::process::exit(0);
-        } else {
-            println!("{}: command not found", input.trim());
-        }
+        handle_command(input.trim());
     }
+}
+
+fn handle_command(command: &str) {
+    let tokens: Vec<&str> = command.split(" ").collect();
+
+    match tokens[..] {
+        ["exit", code] => handle_exit_with_code(code),
+        ["echo", ..] => println!("{}", tokens[1..].join(" ")),
+        _ => println!("{}: command not found", command),
+    }
+}
+
+fn handle_exit_with_code(code: &str) {
+    let code = code.parse::<i32>().unwrap();
+    exit(code);
 }
