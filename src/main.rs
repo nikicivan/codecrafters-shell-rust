@@ -27,6 +27,8 @@ fn handle_command(command: &str) {
     let tokens: Vec<&str> = command.split(" ").collect();
 
     match tokens[..] {
+        ["pwd"] if tokens.len() == 1 => handle_pwd_command(command),
+        ["pwd", ..] => command_not_found(command),
         ["exit", code] => handle_exit_with_code(code),
         ["echo", ..] => println!("{}", tokens[1..].join(" ")),
         ["type", cmd] => handle_type_command(cmd),
@@ -35,7 +37,7 @@ fn handle_command(command: &str) {
 }
 
 fn handle_type_command(command: &str) {
-    let shell_builtin_commands = HashSet::from(["echo", "exit", "type"]);
+    let shell_builtin_commands = HashSet::from(["echo", "exit", "type", "pwd"]);
     let path_env = env::var("PATH").unwrap();
 
     if shell_builtin_commands.contains(command) {
@@ -73,6 +75,15 @@ fn handle_external_run(command: &str) {
             let output = String::from_utf8_lossy(&executable.stdout);
             println!("{}", output.trim_end());
         }
+        Err(_) => command_not_found(command),
+    }
+}
+
+fn handle_pwd_command(command: &str) {
+    let directory = env::current_dir();
+
+    match directory {
+        Ok(result) => println!("{}", result.display()),
         Err(_) => command_not_found(command),
     }
 }
