@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::path::Path;
 use std::{
     env, fs,
     io::{self, Write},
@@ -32,6 +33,7 @@ fn handle_command(command: &str) {
         ["exit", code] => handle_exit_with_code(code),
         ["echo", ..] => println!("{}", tokens[1..].join(" ")),
         ["type", cmd] => handle_type_command(cmd),
+        ["cd", path] => handle_cd_command(path),
         _ => handle_external_run(command),
     }
 }
@@ -85,6 +87,13 @@ fn handle_pwd_command(command: &str) {
     match directory {
         Ok(result) => println!("{}", result.display()),
         Err(_) => command_not_found(command),
+    }
+}
+
+fn handle_cd_command(path: &str) {
+    match env::set_current_dir(Path::new(path)) {
+        Ok(_) => {}
+        Err(_) => println!("cd: {}: No such file or directory", path),
     }
 }
 
