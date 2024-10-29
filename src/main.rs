@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 #[allow(unused_imports)]
 use std::{
     io::{self, Write},
@@ -24,7 +25,18 @@ fn handle_command(command: &str) {
     match tokens[..] {
         ["exit", code] => handle_exit_with_code(code),
         ["echo", ..] => println!("{}", tokens[1..].join(" ")),
+        ["type", cmd] => handle_type_command(cmd),
         _ => println!("{}: command not found", command),
+    }
+}
+
+fn handle_type_command(command: &str) {
+    let shell_builtin_commands = HashSet::from(["echo", "exit", "type"]);
+
+    if shell_builtin_commands.contains(command) {
+        println!("{} is a shell builtin", command);
+    } else {
+        println!("{}: not found", command);
     }
 }
 
